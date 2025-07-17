@@ -2,35 +2,43 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+To install dependencies run
+
+```bash
+npm install
+```
+
+To run the development server, execute:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the page.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Logic for box placement
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* For the initial checks, we make sure that none of the individual boxes with their respective spacing exceed the area of the perimeter.
+* Once that is performed, we do a naïve area check. We check the following condition:
 
-## Learn More
+	```math
+	\sum_{box \in\{A, B, C\}} w_{box}\cdot h_{box} + 2\cdot \min(w_{box}, h_{box})\cdot spacing \leq  \text{perimeter area}
+	```
+	Where $w_{box}$ and $h_{box}$ are the width and height of the box in question respectively. Our area bounding function ensures that the total area occupied by the boxes, including the minimum spacing required, does not exceed the available perimeter area. The minimum spacing, while not accurate gives us a tight bound on the area. We use $2\cdot \min(w_{box}, h_{box})\cdot spacing$ as the spacing area approximation, as any box can have a minimum of two sides exposed without facing another box (as shown in the image, with exposed sides marked in red).
+	
+	<p align="center">
+		<img src="image/README/1752723250108.png" alt="Box Placement Diagram" width="200"/>
+	</p>
 
-To learn more about Next.js, take a look at the following resources:
+	We can have tighter bounds on this area, but I chose to keep it simple.
+* Finally, we do the following with all possible permutations ((A, B, C), (A, C, B), (B, A, C), (B, C, A), (C, A, B), (C, B, A)):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+	* We place the first box in the arrangement in the set in the top left corner of the space.
+	* After that, we try placing the second box either i) under the first box or ii) on the right of the first box. 
+	* Subsequently, we try placing the third box in one of the four positions: i) under the first box ii) under the second box iii) on the right of the first box and iv) on the right of the second box.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+	Note that when we place a box B on the right of a box A, (top left coordinate = (x, y), also note that we are talking in terms of the SVG coordinate system), we set `B.x` as `A.x + A.width + spacing` and `B.y` as `A.y`. Similarly, to place B under A, we set `B.x` as `A.x` and `B.y` as `A.y + A.height + spacing`.
 
-## Deploy on Vercel
+	This would cover all possible ways of placing the three boxes, and at least one configuration would provide us a valid configuration.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+	We return the first feasible combination after checking for no overlaps.
