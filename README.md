@@ -42,3 +42,9 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 	This would cover all possible ways of placing the three boxes, and at least one configuration would provide us a valid configuration.
 
 	We return the first feasible combination after checking for no overlaps.
+
+	<p align="center">
+		<img src="image/README/1752725985827.png" alt="Placement algorithm" width="200"/>
+	</p>
+
+	We would be checking for 6 permutations x 2 positions for the second box x 4 positions for third box, equalling 48 configurations. We can prune some nodes early to optimize the program, but since there are only 48 configurations, we brute-force through all of them while keeping the code simple.
